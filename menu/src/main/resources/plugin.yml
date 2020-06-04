@@ -1,4 +1,0 @@
-name: Menu
-version: ${project.version}
-main: me.idriz.oss.menu.Menu
-api-version: 1.15.2
