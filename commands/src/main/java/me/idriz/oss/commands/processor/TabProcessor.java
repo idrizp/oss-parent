@@ -74,7 +74,7 @@ public class TabProcessor {
     public List<String> execute(CommandSender sender, String[] args) {
 
         List<String> list = new ArrayList<>();
-
+        if(args.length == 0) return list;
 
         //If we have a parameter, don't supply sub commands
 
