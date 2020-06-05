@@ -3,7 +3,7 @@ package me.idriz.oss.commands.processor;
 import me.idriz.oss.commands.BaseCommand;
 import me.idriz.oss.commands.Command;
 import me.idriz.oss.commands.CommandAdapter;
-import me.idriz.oss.commands.CommandProvider;
+import me.idriz.oss.commands.CommandRegistrar;
 import me.idriz.oss.commands.annotation.Argument;
 import me.idriz.oss.commands.annotation.ConsoleOnly;
 import me.idriz.oss.commands.annotation.OptionalArgument;
@@ -79,12 +79,12 @@ public class CommandProcessor {
         if (parameter.isAnnotationPresent(Argument.class)) {
             Argument argument = parameter.getAnnotation(Argument.class);
             if (argument.adapter() != CommandAdapter.class) {
-                adapter = CommandProvider.getByAdapterClass(argument.adapter());
+                adapter = CommandRegistrar.getByAdapterClass(argument.adapter());
                 if (adapter == null)
                     throw new NullPointerException("Couldn't find adapter by class " + argument.adapter());
             }
         }
-        if (adapter == null) adapter = CommandProvider.getByClass(parameter.getType());
+        if (adapter == null) adapter = CommandRegistrar.getByClass(parameter.getType());
         return adapter;
     }
 

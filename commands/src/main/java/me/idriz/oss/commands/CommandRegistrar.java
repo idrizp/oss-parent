@@ -7,7 +7,7 @@ import org.bukkit.plugin.Plugin;
 import java.util.HashMap;
 import java.util.Map;
 
-public class CommandProvider {
+public class CommandRegistrar {
 
     public static final Map<Class, CommandAdapter> COMMAND_ADAPTERS = new HashMap<>();
     private static final Map<Class, CommandAdapter<?>> CLASS_TO_COMMAND_ADAPTER_MAP = new HashMap<>();
@@ -38,7 +38,7 @@ public class CommandProvider {
     private final Plugin plugin;
     private final Map<String, BaseCommand> commands = new HashMap<>();
 
-    public CommandProvider(Plugin plugin) {
+    public CommandRegistrar(Plugin plugin) {
         this.plugin = plugin;
     }
 

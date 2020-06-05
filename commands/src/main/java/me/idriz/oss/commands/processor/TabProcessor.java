@@ -2,7 +2,7 @@ package me.idriz.oss.commands.processor;
 
 import me.idriz.oss.commands.BaseCommand;
 import me.idriz.oss.commands.CommandAdapter;
-import me.idriz.oss.commands.CommandProvider;
+import me.idriz.oss.commands.CommandRegistrar;
 import me.idriz.oss.commands.annotation.Argument;
 import me.idriz.oss.commands.annotation.ConsoleOnly;
 import org.bukkit.ChatColor;
@@ -67,7 +67,7 @@ public class TabProcessor {
             Argument argument = parameter.getAnnotation(Argument.class);
             return Arrays.asList(argument.completions());
         }
-        if (adapter == null) adapter = CommandProvider.getByClass(parameter.getType());
+        if (adapter == null) adapter = CommandRegistrar.getByClass(parameter.getType());
         return adapter.tabComplete(sender, args, arg, parameter);
     }
 
