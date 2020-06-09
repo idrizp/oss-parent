@@ -25,6 +25,7 @@ public class YamlConfig extends YamlConfiguration implements Config {
     public YamlConfig(File directory, String name) {
         this.directory = directory;
         this.file = new File(directory, name + ".yml");
+        if(!file.getParentFile().exists()) file.getParentFile().mkdirs();
         if (!file.exists()) {
             try {
                 file.createNewFile();

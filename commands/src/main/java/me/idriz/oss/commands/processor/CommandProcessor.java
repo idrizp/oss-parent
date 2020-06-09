@@ -64,7 +64,7 @@ public class CommandProcessor {
     private void invokeMethod(Object object, Object... parameters) {
         try {
             command.getMethod().invoke(object, parameters);
-        } catch (IllegalAccessException | InvocationTargetException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
