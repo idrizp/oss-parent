@@ -37,6 +37,4 @@ public interface Config extends ConfigSection {
 
     void addHook(Object object);
 
-    ConfigSection getSection(String path);
-
 }

@@ -15,7 +15,6 @@ import java.util.Set;
 public class YamlConfig extends YamlConfiguration implements Config {
 
     private final Set<Object> hooks = new HashSet<>();
-    private final Map<String, YamlConfigSection> sectionMap = new HashMap<>();
 
     private final File file;
     private final File directory;
@@ -25,7 +24,7 @@ public class YamlConfig extends YamlConfiguration implements Config {
     public YamlConfig(File directory, String name) {
         this.directory = directory;
         this.file = new File(directory, name + ".yml");
-        if(!file.getParentFile().exists()) file.getParentFile().mkdirs();
+        if (!file.getParentFile().exists()) file.getParentFile().mkdirs();
         if (!file.exists()) {
             try {
                 file.createNewFile();
@@ -77,13 +76,22 @@ public class YamlConfig extends YamlConfiguration implements Config {
     }
 
     @Override
-    public ConfigSection getSection(String path) {
-        return sectionMap.getOrDefault(path, new YamlConfigSection(this, path));
+    public Map<String, Object> getValues() {
+        return getValues(false);
     }
 
     @Override
-    public Map<String, Object> getValues() {
-        return getValues(false);
+    public Set<String> getKeys() {
+        return getKeys(false);
+    }
+
+    @Override
+    public ConfigSection getSection(String section) {
+        try {
+            return new YamlConfigSection(this, section);
+        } catch(NullPointerException ex) {
+            return null;
+        }
     }
 
 }

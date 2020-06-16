@@ -2,12 +2,15 @@ package me.idriz.oss.config;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public interface ConfigSection {
 
     void set(String path, Object value);
 
     Map<String, Object> getValues();
+
+    Set<String> getKeys();
 
     Object get(String path);
 
@@ -47,5 +50,6 @@ public interface ConfigSection {
         return (List<String>) getList(path);
     }
 
+    ConfigSection getSection(String section);
 
 }

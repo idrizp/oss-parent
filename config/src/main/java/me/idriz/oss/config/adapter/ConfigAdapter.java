@@ -3,13 +3,16 @@ package me.idriz.oss.config.adapter;
 import me.idriz.oss.config.Config;
 
 import java.util.List;
+import java.util.function.Consumer;
 
 public interface ConfigAdapter<T> {
 
-    T fromString(Config config, String path);
+    void read(Config config, String path, Consumer<T> consumer);
 
-    String toString(Config config, T object);
+    void write(Config config, String key, T object);
 
-    List<T> fromStringList(Config config, String listPath);
+    void writeList(Config config, String path, List<T> objects);
+
+    void readList(Config config, String listPath, Consumer<List<T>> callback);
 
 }

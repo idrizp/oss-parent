@@ -9,8 +9,12 @@ import me.idriz.oss.config.annotation.Value;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.ParameterizedType;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 class YamlProcessor {
 
@@ -39,9 +43,6 @@ class YamlProcessor {
             boolean.class,
             byte.class,
             long.class,
-
-            //Collection Types
-            List.class,
 
 
     };
@@ -82,7 +83,7 @@ class YamlProcessor {
                 getFields(object.getClass())
         );
 
-        boolean addedAnyFields = false;
+        AtomicBoolean addedAnyFields = new AtomicBoolean(false);
 
         for (Field field : fields) {
 
@@ -105,94 +106,89 @@ class YamlProcessor {
             }
             field.setAccessible(true);
 
-            Object value = config.get(key);
+            AtomicReference<Object> value = new AtomicReference<>(config.get(key));
             Object defaultValue = field.get(parent);
 
             if (isConfigPrimitive(field.getType()) && !field.isAnnotationPresent(Adapter.class)) {
-                if (value == null) {
+                if (value.get() == null) {
                     if (defaultValue == null) continue;
                     config.set(key, defaultValue);
-                    addedAnyFields = true;
+                    addedAnyFields.set(true);
                     continue;
                 }
-                field.set(object, value);
+                field.set(object, value.get());
+                continue;
+            }
+            ConfigAdapter configAdapter = null;
+            if (field.isAnnotationPresent(Adapter.class)) {
+                Adapter adapter = field.getAnnotation(Adapter.class);
+                configAdapter = Config.getAdapterByAdapterClass(adapter.value());
+            }
+
+            String finalKey = key;
+
+            if (List.class.isAssignableFrom(field.getType())) {
+                Class<?> genericType = (Class) ((ParameterizedType) field.getGenericType()).getActualTypeArguments()[0];
+                if (configAdapter == null) {
+                    configAdapter = Config.getAdapter(genericType);
+                    if (configAdapter == null && !isConfigPrimitive(genericType)) {
+                        throw new NullPointerException("Couldn't find config adapter for class " + field.getType().getSimpleName());
+                    }
+                }
+
+                if (isConfigPrimitive(genericType) && configAdapter == null) {
+                    value.set(config.getList(finalKey));
+                    if (value.get() == null) {
+                        value.set(defaultValue);
+                        config.set(finalKey, defaultValue);
+                        addedAnyFields.set(true);
+                    }
+                    field.set(object, value.get());
+                    continue;
+                }
+
+                ConfigAdapter finalConfigAdapter = configAdapter;
+
+                configAdapter.readList(config, key, list -> {
+                    try {
+                        if (list == null) {
+                            list = defaultValue;
+                            finalConfigAdapter.writeList(config, finalKey, (List) defaultValue);
+                            addedAnyFields.set(true);
+                        }
+                        field.set(object, list);
+                    } catch (IllegalAccessException e) {
+                        e.printStackTrace();
+                    }
+                });
+
                 continue;
             }
 
-            if (List.class.isAssignableFrom(field.getType())) {
-                ParameterizedType parameterizedType = (ParameterizedType) field.getGenericType();
-                String typeName = parameterizedType.getActualTypeArguments()[0].getTypeName();
-                try {
-
-                    Class<?> clazz = CLASS_BY_NAME_MAP.getOrDefault(
-                            typeName,
-                            Class.forName(typeName)
-                    );
-
-                    if (isConfigPrimitive(clazz) && !field.isAnnotationPresent(Adapter.class)) {
-                        if (value == null) {
-                            addedAnyFields = true;
-                            config.set(key, defaultValue);
-                            continue;
-                        }
-                        field.set(object, field.getType().cast(config.getList(key)));
-                        continue;
-                    }
-
-                    ConfigAdapter adapter = getAdapter(field);
-                    if (adapter == null)
-                        throw new NullPointerException("Couldn't find adapter class for type " + field.getType().getSimpleName());
-
-                    List<String> list = config.getStringList(key);
-                    if (list.size() == 0) {
-                        config.set(key, ((List<?>) defaultValue)
-                                .stream()
-                                .map(val -> adapter.toString(config, val))
-                                .collect(Collectors.toList())
-                        );
-                        addedAnyFields = true;
-                        continue;
-                    }
-
-                    List<?> mapped = adapter.fromStringList(config, key);
-                    field.set(object, mapped);
-
-                    continue;
-
-                } catch (ClassNotFoundException e) {
-                    continue;
+            if (configAdapter == null) {
+                configAdapter = Config.getAdapter(field.getType());
+                if(configAdapter == null) {
+                    throw new NullPointerException("Couldn't find config adapter for class " + field.getType().getSimpleName());
                 }
             }
 
-            ConfigAdapter adapter = getAdapter(field);
-
-            if (adapter == null)
-                throw new NullPointerException("Couldn't find adapter class for type " + field.getType().getSimpleName());
-
-            value = adapter.fromString(config, key);
-            if (value == null) {
-                value = defaultValue;
-                config.set(key, adapter.toString(config, defaultValue));
-                addedAnyFields = true;
-                if (value == null) continue;
-            } else field.set(object, value);
+            ConfigAdapter finalConfigAdapter = configAdapter;
+            configAdapter.read(config, key, result -> {
+                if (result == null) {
+                    result = defaultValue;
+                    finalConfigAdapter.write(config, finalKey, defaultValue);
+                    addedAnyFields.set(true);
+                }
+                try {
+                    field.set(object, result);
+                } catch (IllegalAccessException e) {
+                    e.printStackTrace();
+                }
+            });
 
         }
 
-        if (addedAnyFields) config.save();
-    }
-
-    private static ConfigAdapter getAdapter(Field field) {
-        ConfigAdapter adapter;
-        if (field.isAnnotationPresent(Adapter.class)) {
-            Class<?> clazz = field.getAnnotation(Adapter.class).value();
-            adapter = Config.getAdapterByAdapterClass(clazz);
-            if (adapter == null)
-                throw new NullPointerException("Couldn't find custom adapter class by type " + clazz.getSimpleName());
-        } else {
-            adapter = Config.getAdapter(field.getType());
-        }
-        return adapter;
+        if (addedAnyFields.get()) config.save();
     }
 
 
