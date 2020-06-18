@@ -19,7 +19,6 @@ import java.util.concurrent.atomic.AtomicReference;
 class YamlProcessor {
 
     private static final Map<Class<?>, List<Field>> FIELDS = new HashMap<>();
-    private static final Map<String, Class<?>> CLASS_BY_NAME_MAP = new HashMap<>();
 
     private static final Class<?>[] PRIMITIVE_TYPES = {
 
@@ -74,6 +73,80 @@ class YamlProcessor {
             }
         }
         return fields;
+    }
+
+    private static ConfigAdapter getAdapter(Field field) {
+
+        ConfigAdapter adapter = null;
+        boolean missingAdapter = false;
+
+        Class type = field.getType();
+        if (List.class.isAssignableFrom(field.getType())) {
+            type = (Class) ((ParameterizedType) field.getGenericType()).getActualTypeArguments()[0];
+        }
+        if (field.isAnnotationPresent(Adapter.class)) {
+            Adapter annotation = field.getAnnotation(Adapter.class);
+            adapter = Config.getAdapterByAdapterClass(annotation.value());
+            if (adapter == null) missingAdapter = true;
+        } else if (isConfigPrimitive(type)) {
+            adapter = null;
+        } else {
+            adapter = Config.getAdapter(type);
+            if (adapter == null) missingAdapter = true;
+        }
+        if (missingAdapter) throw new NullPointerException("Missing adapter for type " + type.getName());
+        return adapter;
+    }
+
+    static <T> void writeHook(Config config, T hook) {
+        List<Field> fields = FIELDS.getOrDefault(hook.getClass(), getFields(hook.getClass()));
+        for (Field field : fields) {
+
+            Object parent = hook;
+            String key = field.getAnnotation(Value.class).value();
+            Class<?> lastDeclaredClass = field.getDeclaringClass();
+
+            while (lastDeclaredClass.isAnnotationPresent(Section.class)) {
+                key = lastDeclaredClass.getAnnotation(Section.class).value().concat(".").concat(key);
+                lastDeclaredClass = lastDeclaredClass.getDeclaringClass();
+            }
+
+            if (!lastDeclaredClass.equals(hook.getClass())) {
+                try {
+                    parent = lastDeclaredClass.getConstructors()[0].newInstance();
+                } catch (InstantiationException | InvocationTargetException | IllegalAccessException e) {
+                    throw new IllegalArgumentException("Sectioned class MUST have an empty, public constructor.");
+                }
+            }
+
+            try {
+                Object value = field.get(parent);
+                if(value == null) {
+                    //We have a null value. Don't bother writing.
+                    continue;
+                }
+
+                ConfigAdapter adapter = getAdapter(field);
+                if (List.class.isAssignableFrom(field.getType())) {
+                    //We have a collection. write collection
+                    if(adapter == null) {
+                        config.set(key, value);
+                        continue;
+                    }
+                    adapter.writeList(config, key, (List) value);
+                    continue;
+                }
+
+                if(adapter == null) {
+                    config.set(key, value);
+                    continue;
+                }
+                adapter.write(config, key, value);
+
+            } catch (IllegalAccessException e) {
+                continue;
+            }
+        }
     }
 
     static <T> void initializeHook(Config config, T object) throws IllegalAccessException {
@@ -167,7 +240,7 @@ class YamlProcessor {
 
             if (configAdapter == null) {
                 configAdapter = Config.getAdapter(field.getType());
-                if(configAdapter == null) {
+                if (configAdapter == null) {
                     throw new NullPointerException("Couldn't find config adapter for class " + field.getType().getSimpleName());
                 }
             }

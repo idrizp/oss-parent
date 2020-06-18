@@ -33,8 +33,7 @@ public class YamlConfigSection implements ConfigSection {
     public Set<String> getKeys() {
         return yamlSection.getKeys(false);
     }
-
-
+    
     @Override
     public Object get(String path) {
         return yamlSection.get(path);

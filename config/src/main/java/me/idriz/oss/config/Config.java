@@ -35,6 +35,8 @@ public interface Config extends ConfigSection {
 
     void save();
 
+    void saveFile();
+
     void addHook(Object object);
 
 }

@@ -7,7 +7,6 @@ import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -59,6 +58,16 @@ public class YamlConfig extends YamlConfiguration implements Config {
     @Override
     public void save() {
         try {
+            hooks.forEach((hook) -> YamlProcessor.writeHook(this, hook));
+            this.save(file);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void saveFile() {
+        try {
             this.save(file);
         } catch (IOException e) {
             e.printStackTrace();
@@ -89,7 +98,7 @@ public class YamlConfig extends YamlConfiguration implements Config {
     public ConfigSection getSection(String section) {
         try {
             return new YamlConfigSection(this, section);
-        } catch(NullPointerException ex) {
+        } catch (NullPointerException ex) {
             return null;
         }
     }
