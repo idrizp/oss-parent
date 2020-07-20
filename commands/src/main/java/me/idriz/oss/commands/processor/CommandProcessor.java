@@ -4,6 +4,7 @@ import me.idriz.oss.commands.BaseCommand;
 import me.idriz.oss.commands.Command;
 import me.idriz.oss.commands.CommandAdapter;
 import me.idriz.oss.commands.CommandRegistrar;
+import me.idriz.oss.commands.adapter.EnumCommandAdapter;
 import me.idriz.oss.commands.annotation.Argument;
 import me.idriz.oss.commands.annotation.ConsoleOnly;
 import me.idriz.oss.commands.annotation.OptionalArgument;
@@ -14,7 +15,6 @@ import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Parameter;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -26,27 +26,23 @@ public class CommandProcessor {
     public static String noPermissionMessage = ChatColor.RED + "No permission.";
     public static String consoleOnlyMessage = ChatColor.RED + "This command can only be ran by the console.";
 
-    private final BaseCommand command;
+    private final BaseCommand<?> command;
     private final Parameter[] parameters;
-    private final Set<Parameter> optionalParameters;
     private final Set<Parameter> nonOptionalParameters;
-    private final Map<BaseCommand, CommandProcessor> subCommandProcessors = new HashMap<>();
+    private final Map<BaseCommand<?>, CommandProcessor> subCommandProcessors = new HashMap<>();
     private final Plugin plugin;
 
-    public CommandProcessor(Plugin plugin, BaseCommand command) {
+    public CommandProcessor(Plugin plugin, BaseCommand<?> command) {
         this.plugin = plugin;
         this.command = command;
         this.parameters = command.getMethod().getParameters();
-        this.optionalParameters = Arrays.stream(parameters)
-                .filter(parameter -> parameter.isAnnotationPresent(OptionalArgument.class))
-                .collect(Collectors.toSet());
 
         this.nonOptionalParameters = Arrays.stream(parameters)
                 .filter(parameter -> !parameter.isAnnotationPresent(OptionalArgument.class))
                 .collect(Collectors.toSet());
 
         command.getSubCommands().forEach(subCommand -> {
-            this.subCommandProcessors.put((BaseCommand) subCommand, new CommandProcessor(plugin, (BaseCommand) subCommand));
+            this.subCommandProcessors.put(subCommand, new CommandProcessor(plugin, subCommand));
         });
     }
 
@@ -74,8 +70,8 @@ public class CommandProcessor {
         else invokeMethod(object, parameters);
     }
 
-    private CommandAdapter getAdapter(Parameter parameter) {
-        CommandAdapter adapter = null;
+    private CommandAdapter<?> getAdapter(Parameter parameter) {
+        CommandAdapter<?> adapter = null;
         if (parameter.isAnnotationPresent(Argument.class)) {
             Argument argument = parameter.getAnnotation(Argument.class);
             if (argument.adapter() != CommandAdapter.class) {
@@ -85,6 +81,9 @@ public class CommandProcessor {
             }
         }
         if (adapter == null) adapter = CommandRegistrar.getByClass(parameter.getType());
+        if (adapter == null && parameter.getType().isEnum()) {
+            adapter = new EnumCommandAdapter(parameter.getType());
+        }
         return adapter;
     }
 

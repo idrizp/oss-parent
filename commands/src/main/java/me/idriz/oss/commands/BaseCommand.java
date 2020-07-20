@@ -13,7 +13,7 @@ public class BaseCommand<T> {
     private final T parent;
     private final CommandInfo commandInfo;
     private final Set<BaseCommand<?>> subCommands = new HashSet<>();
-    private String[] allAliases;
+    private final String[] allAliases;
     private Method method;
     private boolean subCommand = false;
 

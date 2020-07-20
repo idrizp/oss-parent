@@ -9,8 +9,8 @@ import java.util.Map;
 
 public class CommandRegistrar {
 
-    public static final Map<Class, CommandAdapter> COMMAND_ADAPTERS = new HashMap<>();
-    private static final Map<Class, CommandAdapter<?>> CLASS_TO_COMMAND_ADAPTER_MAP = new HashMap<>();
+    public static final Map<Class<?>, CommandAdapter<?>> COMMAND_ADAPTERS = new HashMap<>();
+    private static final Map<Class<?>, CommandAdapter<?>> CLASS_TO_COMMAND_ADAPTER_MAP = new HashMap<>();
 
     static {
 
@@ -47,7 +47,7 @@ public class CommandRegistrar {
     }
 
     public static <T> CommandAdapter<T> getByClass(Class<?> clazz) {
-        return COMMAND_ADAPTERS.get(clazz);
+        return (CommandAdapter<T>) COMMAND_ADAPTERS.get(clazz);
     }
 
     public static void registerAdapter(Class<?> clazz, CommandAdapter<?> adapter) {
