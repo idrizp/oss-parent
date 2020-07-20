@@ -19,7 +19,7 @@ public class EnumCommandAdapter<T extends Enum<T>> implements CommandAdapter<T> 
 
     @Override
     public T convert(CommandSender sender, String argument, String[] args, String[] originalArgs, Parameter parameter) {
-        return T.valueOf(clazz, argument.toLowerCase());
+        return T.valueOf(clazz, argument.toUpperCase());
     }
 
     @Override
