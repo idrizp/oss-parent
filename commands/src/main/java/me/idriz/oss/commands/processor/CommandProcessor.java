@@ -104,7 +104,7 @@ public class CommandProcessor {
                 return;
             }
 
-            if (!sender.hasPermission(command.getCommandInfo().permission())) {
+            if (!command.getCommandInfo().permission().isEmpty() && !sender.hasPermission(command.getCommandInfo().permission())) {
                 sender.sendMessage(noPermissionMessage);
                 return;
             }
