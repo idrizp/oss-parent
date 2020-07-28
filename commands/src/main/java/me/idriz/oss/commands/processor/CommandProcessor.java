@@ -180,25 +180,21 @@ public class CommandProcessor {
                 return;
             }
 
-            int realLength = hasSender ? objects.size() - 1 : objects.size();
+            int objectSize = hasSender ? objects.size() - 1 : objects.size();
             int parameterLength = hasSender ? parameters.length - 1 : parameters.length;
-            if (realLength < parameterLength) {
-                for (int i = realLength; i < parameters.length; i++) {
-
-                    String[] argCopy = Arrays.copyOfRange(args, i == 0 ? i : i - 1, args.length);
-
-                    Parameter atIndex = parameters[i];
-                    if (!atIndex.isAnnotationPresent(OptionalArgument.class)) continue;
-                    OptionalArgument argument = atIndex.getAnnotation(OptionalArgument.class);
-                    CommandAdapter<?> adapter = getAdapter(atIndex);
+            if (objectSize < parameterLength) {
+                for (int i = objectSize; i < parameterLength; i++) {
+                    Parameter parameter = parameters[hasSender ? i + 1 : i];
+                    if (!parameter.isAnnotationPresent(OptionalArgument.class)) continue;
+                    OptionalArgument argument = parameter.getAnnotation(OptionalArgument.class);
                     if (argument.value().equals("")) {
                         objects.add(null);
                         continue;
-                    } else {
-                        objects.add(adapter.convert(sender, argument.value(), args, argCopy, atIndex));
                     }
+                    objects.add(getAdapter(parameter).convert(sender, argument.value(), Arrays.copyOfRange(args, i, args.length), args, parameter));
                 }
             }
+
             invoke(async, command.getParent(), objects.toArray());
         });
     }
