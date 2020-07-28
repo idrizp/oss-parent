@@ -36,10 +36,12 @@ public class CommandRegistrar {
     }
 
     private final Plugin plugin;
+    private final String prefix;
     private final Map<String, BaseCommand> commands = new HashMap<>();
 
     public CommandRegistrar(Plugin plugin) {
         this.plugin = plugin;
+        this.prefix = plugin.getName();
     }
 
     public static CommandAdapter getByAdapterClass(Class clazz) {
@@ -62,7 +64,7 @@ public class CommandRegistrar {
     public <T> void registerCommand(T object) {
         BaseCommand<T> command = new BaseCommand<>(object);
         commands.put(command.getCommandInfo().value(), command);
-        plugin.getServer().getCommandMap().register(command.getCommandInfo().value(), new CommandExecutor(command, plugin));
+        plugin.getServer().getCommandMap().register(prefix, new CommandExecutor(command, plugin));
 
     }
 
