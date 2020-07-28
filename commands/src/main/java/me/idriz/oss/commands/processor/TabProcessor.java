@@ -3,6 +3,7 @@ package me.idriz.oss.commands.processor;
 import me.idriz.oss.commands.BaseCommand;
 import me.idriz.oss.commands.CommandAdapter;
 import me.idriz.oss.commands.CommandRegistrar;
+import me.idriz.oss.commands.adapter.EnumCommandAdapter;
 import me.idriz.oss.commands.annotation.Argument;
 import me.idriz.oss.commands.annotation.ConsoleOnly;
 import org.bukkit.ChatColor;
@@ -68,6 +69,9 @@ public class TabProcessor {
             return Arrays.asList(argument.completions());
         }
         if (adapter == null) adapter = CommandRegistrar.getByClass(parameter.getType());
+        if (adapter == null && parameter.getType().isEnum()) {
+            adapter = new EnumCommandAdapter(parameter.getType());
+        }
         return adapter.tabComplete(sender, args, arg, parameter);
     }
 
