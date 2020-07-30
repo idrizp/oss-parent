@@ -29,7 +29,7 @@ public class CommandRegistrar {
         registerAdapter(boolean.class, new BooleanCommandAdapter());
 
         registerAdapter(Long.class, new LongCommandAdapter());
-        registerAdapter(long.class, new BooleanCommandAdapter());
+        registerAdapter(long.class, new LongCommandAdapter());
 
         registerAdapter(Player.class, new PlayerCommandAdapter());
 
