@@ -9,7 +9,7 @@ import java.lang.annotation.Target;
 @Target({ElementType.TYPE, ElementType.METHOD})
 public @interface CommandInfo {
 
-    String value() default "";
+    String value();
 
     String[] aliases() default {};
 
