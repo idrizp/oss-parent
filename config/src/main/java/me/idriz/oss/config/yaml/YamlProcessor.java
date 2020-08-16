@@ -75,14 +75,13 @@ class YamlProcessor {
         return fields;
     }
 
-    private static ConfigAdapter getAdapter(Field field) {
-
-        ConfigAdapter adapter = null;
+    private static ConfigAdapter<?> getAdapter(Field field) {
+        ConfigAdapter<?> adapter;
         boolean missingAdapter = false;
 
-        Class type = field.getType();
+        Class<?> type = field.getType();
         if (List.class.isAssignableFrom(field.getType())) {
-            type = (Class) ((ParameterizedType) field.getGenericType()).getActualTypeArguments()[0];
+            type = (Class<?>) ((ParameterizedType) field.getGenericType()).getActualTypeArguments()[0];
         }
         if (field.isAnnotationPresent(Adapter.class)) {
             Adapter annotation = field.getAnnotation(Adapter.class);
@@ -142,7 +141,6 @@ class YamlProcessor {
                     continue;
                 }
                 adapter.write(config, key, value);
-
             } catch (IllegalAccessException e) {
                 continue;
             }
@@ -185,7 +183,6 @@ class YamlProcessor {
             if (isConfigPrimitive(field.getType()) && !field.isAnnotationPresent(Adapter.class)) {
                 if (value.get() == null) {
                     if (defaultValue == null) continue;
-                    config.set(key, defaultValue);
                     addedAnyFields.set(true);
                     continue;
                 }
@@ -213,21 +210,15 @@ class YamlProcessor {
                     value.set(config.getList(finalKey));
                     if (value.get() == null) {
                         value.set(defaultValue);
-                        config.set(finalKey, defaultValue);
-                        addedAnyFields.set(true);
                     }
                     field.set(object, value.get());
                     continue;
                 }
 
-                ConfigAdapter finalConfigAdapter = configAdapter;
-
                 configAdapter.readList(config, key, list -> {
                     try {
                         if (list == null) {
                             list = defaultValue;
-                            finalConfigAdapter.writeList(config, finalKey, (List) defaultValue);
-                            addedAnyFields.set(true);
                         }
                         field.set(object, list);
                     } catch (IllegalAccessException e) {
@@ -260,7 +251,6 @@ class YamlProcessor {
             });
 
         }
-
         if (addedAnyFields.get()) config.save();
     }
 
