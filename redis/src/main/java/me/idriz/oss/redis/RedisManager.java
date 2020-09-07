@@ -23,6 +23,8 @@ public class RedisManager {
             plugin.getServer().getPluginManager().disablePlugin(plugin);
         }
 
+
+
     }
 
     public JedisPool getJedisPool() {

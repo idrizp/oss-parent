@@ -12,6 +12,8 @@
         <module>commands</module>
         <module>menu</module>
         <module>config</module>
+        <module>redis</module>
+        <module>response</module>
     </modules>
 
 
