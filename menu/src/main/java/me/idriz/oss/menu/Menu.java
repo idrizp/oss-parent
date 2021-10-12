@@ -27,8 +27,8 @@ public interface Menu {
 
     static void show(Player player, Menu menu) {
         close(player);
-        MENUS.put(player, menu);
         player.openInventory(menu.getInventory());
+        MENUS.put(player, menu);
     }
 
     static void close(Player player) {
