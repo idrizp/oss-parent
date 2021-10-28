@@ -32,7 +32,7 @@ public class MenuListener implements Listener {
             if(menu.getItems().containsKey(e.getRawSlot())) {
                 MenuItem item = menu.getItems().get(e.getRawSlot());
                 if(item == null) {
-                    if (e.getAction() != InventoryAction.PLACE_ALL) {
+                    if (!e.getAction().name().startsWith("PLACE")) {
                         return;
                     }
                     menu.onItemMove(e);
