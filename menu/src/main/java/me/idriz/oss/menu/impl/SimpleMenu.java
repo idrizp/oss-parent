@@ -1,9 +1,11 @@
 package me.idriz.oss.menu.impl;
 
+import java.util.function.Consumer;
 import me.idriz.oss.menu.Menu;
 import me.idriz.oss.menu.MenuItem;
 import me.idriz.oss.menu.template.MenuTemplate;
 import org.bukkit.Bukkit;
+import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
 
 import java.util.HashMap;
@@ -15,6 +17,7 @@ public class SimpleMenu implements Menu {
     private final String title;
     private final int rows;
     private final Map<Integer, MenuItem> items;
+    private Consumer<InventoryClickEvent> itemMoveConsumer = e -> e.setCancelled(true);
     private MenuTemplate template;
 
     public SimpleMenu(String title, int rows) {
@@ -22,6 +25,10 @@ public class SimpleMenu implements Menu {
         this.rows = rows;
         this.items = new HashMap<>();
         this.inventory = Bukkit.createInventory(null, rows * 9, title);
+    }
+
+    public void onItemMove(Consumer<InventoryClickEvent> itemMoveConsumer) {
+        this.itemMoveConsumer = itemMoveConsumer;
     }
 
     @Override
@@ -37,6 +44,11 @@ public class SimpleMenu implements Menu {
     @Override
     public MenuTemplate getMenuTemplate() {
         return template;
+    }
+
+    @Override
+    public void onItemMove(InventoryClickEvent event) {
+        itemMoveConsumer.accept(event);
     }
 
     @Override

@@ -6,6 +6,7 @@ import me.idriz.oss.menu.MenuItem;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.inventory.InventoryAction;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
@@ -31,6 +32,10 @@ public class MenuListener implements Listener {
             if(menu.getItems().containsKey(e.getRawSlot())) {
                 MenuItem item = menu.getItems().get(e.getRawSlot());
                 if(item == null) {
+                    if (e.getAction() != InventoryAction.PLACE_ALL) {
+                        return;
+                    }
+                    menu.onItemMove(e);
                     return;
                 }
                 if(item.isCancel()) {

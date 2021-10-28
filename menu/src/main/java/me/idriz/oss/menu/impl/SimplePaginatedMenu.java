@@ -1,5 +1,6 @@
 package me.idriz.oss.menu.impl;
 
+import java.util.function.Consumer;
 import me.idriz.oss.menu.Menu;
 import me.idriz.oss.menu.MenuItem;
 import me.idriz.oss.menu.PaginatedMenu;
@@ -8,6 +9,7 @@ import me.idriz.oss.menu.util.ItemBuilder;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
+import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
@@ -30,6 +32,7 @@ public class SimplePaginatedMenu implements PaginatedMenu {
     private boolean isPage;
 
     private MenuTemplate menuTemplate;
+    private Consumer<InventoryClickEvent> itemMoveConsumer = e -> e.setCancelled(true);
     private Function<PaginatedMenu, String> pageTitle;
 
     public SimplePaginatedMenu(String title, int rows) {
@@ -53,6 +56,10 @@ public class SimplePaginatedMenu implements PaginatedMenu {
         if (!isPage) pages.put(currentPage, this);
 
 
+    }
+
+    public void onItemMove(Consumer<InventoryClickEvent> itemMoveConsumer) {
+        this.itemMoveConsumer = itemMoveConsumer;
     }
 
     @Override
@@ -149,6 +156,11 @@ public class SimplePaginatedMenu implements PaginatedMenu {
     @Override
     public MenuTemplate getMenuTemplate() {
         return menuTemplate;
+    }
+
+    @Override
+    public void onItemMove(InventoryClickEvent event) {
+        itemMoveConsumer.accept(event);
     }
 
 

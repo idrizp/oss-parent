@@ -3,6 +3,7 @@ package me.idriz.oss.menu;
 import me.idriz.oss.menu.listener.MenuListener;
 import me.idriz.oss.menu.template.MenuTemplate;
 import org.bukkit.entity.Player;
+import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.plugin.Plugin;
 
@@ -18,6 +19,8 @@ public interface Menu {
     Map<Integer, MenuItem> getItems();
 
     MenuTemplate getMenuTemplate();
+
+    void onItemMove(InventoryClickEvent event);
 
     void setMenuTemplate(MenuTemplate template);
 
